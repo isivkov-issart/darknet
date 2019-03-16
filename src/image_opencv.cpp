@@ -8,7 +8,7 @@
 using namespace cv;
 
 extern "C" {
-
+/*
 IplImage *image_to_ipl(image im)
 {
     int x,y,c;
@@ -44,25 +44,41 @@ image ipl_to_image(IplImage* src)
     }
     return im;
 }
+*/
+
+typedef cv::Point3_<uint8_t> Pixel;
 
 Mat image_to_mat(image im)
 {
-    image copy = copy_image(im);
-    constrain_image(copy);
-    if(im.c == 3) rgbgr_image(copy);
-
-    IplImage *ipl = image_to_ipl(copy);
-    Mat m = cvarrToMat(ipl, true);
-    cvReleaseImage(&ipl);
-    free_image(copy);
+    Mat m = Mat(im.h, im.w, CV_8UC3);
+    for (int r = 0; r < m.rows; ++r) {
+        Pixel* ptr = m.ptr<Pixel>(r, 0);
+        const Pixel* ptr_end = ptr + m.cols;
+        int c = 0;
+        for (; ptr != ptr_end; ++ptr) {
+            ptr->x = (unsigned char)(im.data[0*im.w*im.h + r*im.w + c]*255);
+            ptr->y = (unsigned char)(im.data[1*im.w*im.h + r*im.w + c]*255);
+            ptr->z = (unsigned char)(im.data[2*im.w*im.h + r*im.w + c]*255);
+            c += 1;
+        }
+    }
     return m;
 }
 
 image mat_to_image(Mat m)
 {
-    IplImage ipl = m;
-    image im = ipl_to_image(&ipl);
-    rgbgr_image(im);
+    image im = make_image(m.cols, m.rows, 3);
+    for (int r = 0; r < m.rows; ++r) {
+        Pixel* ptr = m.ptr<Pixel>(r, 0);
+        const Pixel* ptr_end = ptr + m.cols;
+        int c = 0;
+        for (; ptr != ptr_end; ++ptr) {
+            im.data[0*im.w*im.h + r*im.w + c] = ptr->x/255.0;
+            im.data[1*im.w*im.h + r*im.w + c] = ptr->y/255.0;
+            im.data[2*im.w*im.h + r*im.w + c] = ptr->z/255.0;
+            c += 1;
+        }
+    }
     return im;
 }
 
@@ -72,9 +88,9 @@ void *open_video_stream(const char *f, int c, int w, int h, int fps)
     if(f) cap = new VideoCapture(f);
     else cap = new VideoCapture(c);
     if(!cap->isOpened()) return 0;
-    if(w) cap->set(CV_CAP_PROP_FRAME_WIDTH, w);
-    if(h) cap->set(CV_CAP_PROP_FRAME_HEIGHT, w);
-    if(fps) cap->set(CV_CAP_PROP_FPS, w);
+    if(w) cap->set(CAP_PROP_FRAME_WIDTH, w);
+    if(h) cap->set(CAP_PROP_FRAME_HEIGHT, w);
+    if(fps) cap->set(CAP_PROP_FPS, w);
     return (void *) cap;
 }
 
@@ -123,7 +139,7 @@ void make_window(char *name, int w, int h, int fullscreen)
 {
     namedWindow(name, WINDOW_NORMAL); 
     if (fullscreen) {
-        setWindowProperty(name, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+        setWindowProperty(name, WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
     } else {
         resizeWindow(name, w, h);
         if(strcmp(name, "Demo") == 0) moveWindow(name, 0, 0);
