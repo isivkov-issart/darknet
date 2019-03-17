@@ -1,4 +1,4 @@
-GPU=0
+GPU=1
 CUDNN=0
 OPENCV=1
 OPENMP=0
@@ -13,14 +13,15 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 # This is what I use, uncomment if you know your arch and want to specify
 # ARCH= -gencode arch=compute_52,code=compute_52
 
+
 VPATH=./src/:./examples
 SLIB=libdarknet.so
 ALIB=libdarknet.a
 EXEC=darknet
 OBJDIR=./obj/
 
-CC=gcc
-CPP=g++
+CC=gcc-6
+CPP=g++-6
 NVCC=nvcc 
 AR=ar
 ARFLAGS=rcs
@@ -40,20 +41,6 @@ endif
 CFLAGS+=$(OPTS)
 
 ifeq ($(OPENCV), 1) 
-OPENCV_LIBS=  -L/usr/local/lib \
- -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_calib3d\
- -lopencv_ccalib -lopencv_core -lopencv_datasets -lopencv_dnn_objdetect\
- -lopencv_dnn -lopencv_dpm -lopencv_face -lopencv_features2d\
- -lopencv_flann -lopencv_freetype -lopencv_fuzzy -lopencv_gapi -lopencv_hdf\
- -lopencv_hfs -lopencv_highgui -lopencv_imgcodecs -lopencv_img_hash\
- -lopencv_imgproc -lopencv_line_descriptor -lopencv_ml -lopencv_objdetect\
- -lopencv_optflow -lopencv_phase_unwrapping -lopencv_photo -lopencv_plot\
- -lopencv_reg -lopencv_rgbd -lopencv_saliency -lopencv_shape\
- -lopencv_stereo -lopencv_stitching -lopencv_structured_light -lopencv_superres\
- -lopencv_surface_matching -lopencv_text -lopencv_tracking -lopencv_videoio\
- -lopencv_video -lopencv_videostab -lopencv_xfeatures2d -lopencv_ximgproc\
- -lopencv_xobjdetect -lopencv_xphoto -lrt -lpthread -lm -ldl
-
 COMMON+= -DOPENCV
 CFLAGS+= -DOPENCV
 LDFLAGS+= `pkg-config --libs opencv` -lstdc++
@@ -64,6 +51,7 @@ ifeq ($(GPU), 1)
 COMMON+= -DGPU -I/usr/local/cuda/include/
 CFLAGS+= -DGPU
 LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand
+NVFLAGS+= -ccbin=/usr/bin/gcc-6
 endif
 
 ifeq ($(CUDNN), 1) 
@@ -103,7 +91,7 @@ $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@
+	$(NVCC) $(ARCH) $(COMMON) $(NVFLAGS) --compiler-options "$(CFLAGS)" -c $< -o $@
 
 obj:
 	mkdir -p obj

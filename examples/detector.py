@@ -6,20 +6,21 @@
 import sys, os
 sys.path.append(os.path.join(os.getcwd(),'python/'))
 
-import darknet as dn
+from darknet import darknet as dn
 import pdb
 
 dn.set_gpu(0)
-net = dn.load_net("cfg/yolov3.cfg", "weights/yolov3.weights", 0)
-meta = dn.load_meta("cfg/coco.data")
+net = dn.load_net(b"cfg/yolov3.cfg", b"weights/yolov3.weights", 0)
+meta = dn.load_meta(b"cfg/coco.data")
+print(meta)
 
 # And then down here you could detect a lot more images like:
-r = dn.detect(net, meta, "data/eagle.jpg")
-print r
-r = dn.detect(net, meta, "data/giraffe.jpg")
-print r
-r = dn.detect(net, meta, "data/horses.jpg")
-print r
-r = dn.detect(net, meta, "data/person.jpg")
-print r
+r = dn.detect(net, meta, b"data/eagle.jpg")
+print(r)
+r = dn.detect(net, meta, b"data/giraffe.jpg")
+print(r)
+r = dn.detect(net, meta, b"data/horses.jpg")
+print(r)
+r = dn.detect(net, meta, b"data/person.jpg")
+print(r)
 
